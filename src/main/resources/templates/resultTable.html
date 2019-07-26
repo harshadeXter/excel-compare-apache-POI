@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns: layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Result Sheet</title>
+</head>
+<body>
+<div class = "container">
+    <h2>Marked Paper</h2>
+    <table class="table table-striped">
+        <tr>
+            <th>Question Number</th>
+            <th>Correct Answer</th>
+            <th>Student Submitted Answer</th>
+            <th>Correct Formula</th>
+            <th>Student Submitted Formula</th>
+            <th>Remarks</th>
+        </tr>
+        <tr th:each="question : ${myJson}">
+            <td th:text="${question.value.id}"></td>
+            <td th:text="${question.value.expectedAnswer}"></td>
+            <td th:text="${question.value.submittedAnswer}"></td>
+            <td th:text="${question.value.expectedFormula}"></td>
+            <td th:text="${question.value.submittedFormula}"></td>
+            <td th:text="${question.value.statusMessage}"></td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
