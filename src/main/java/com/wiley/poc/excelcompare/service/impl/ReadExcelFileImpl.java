@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,9 +38,9 @@ public class ReadExcelFileImpl implements ReadExcelFile {
 
 
             results = validateAnswers(answer_sheet_map, student_sheet_map);
-            System.out.println(results.size());
-
-            markAnswerSheet(results, excelTwo);
+            //System.out.println(results.size());
+            //testMethod();
+            markAnswerSheet(results);
             //HashMap h = loadExcelIntoHtml(answer_sheet);
             //System.out.println(h);
 
@@ -81,7 +82,7 @@ public class ReadExcelFileImpl implements ReadExcelFile {
                 }
             }
         }
-        System.out.println(cell_details.size());
+        //System.out.println(cell_details.size());
         return cell_details;
     }
 
@@ -94,6 +95,10 @@ public class ReadExcelFileImpl implements ReadExcelFile {
                 String ref_string = ((XSSFCell) cell).getReference();
                 CellStyle cs = cell.getCellStyle();
                 Color color = cs.getFillForegroundColorColor();
+                int rowId = cell.getRowIndex();
+                int columnId = cell.getColumnIndex();
+                cd.setRowIndex(rowId);
+                cd.setColumnId(columnId);
                 if (color != null) {
                     if (color instanceof XSSFColor) {
                         String color_code = ((XSSFColor) color).getARGBHex();
@@ -119,7 +124,7 @@ public class ReadExcelFileImpl implements ReadExcelFile {
                 }
             }
         }
-        System.out.println(cell_details.size());
+        //System.out.println(cell_details.size());
         return cell_details;
     }
 
@@ -168,38 +173,87 @@ public class ReadExcelFileImpl implements ReadExcelFile {
         return markedPaper;
     }
 
-    public void markAnswerSheet(Map results, FileInputStream file) {
+    public void markAnswerSheet(HashMap results) {
         for (Object key : results.keySet()) {
             MarkedPaper cell_info = (MarkedPaper) results.get(key);
+            //System.out.println("Cell info "  + cell_info.getCellIndex());
             int rowIndex = cell_info.getRowId();
             int columnIndex = cell_info.getColumnId();
-
             try {
-                FileInputStream openFile = new FileInputStream(new File("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\student_sheet\\student_sheet.xlsx"));
+                FileInputStream openFile = new FileInputStream(new File("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\student_sheet\\answer_sheet.xlsx"));
                 XSSFWorkbook workbook = new XSSFWorkbook(openFile);
-                XSSFSheet sheetName = workbook.getSheetAt(1);
+                XSSFSheet sheetName = workbook.getSheetAt(0);
                 Cell cell = sheetName.getRow(rowIndex).getCell(columnIndex);
+               /* Row row = sheetName.createRow(rowIndex);
+                Cell test = row.createCell(columnIndex);*/
+                //System.out.println(cell);
                 CellStyle cell_style_red = workbook.createCellStyle();
                 cell_style_red.setFillForegroundColor(IndexedColors.RED.getIndex());
+                cell_style_red.setFillPattern(FillPatternType.SOLID_FOREGROUND);
                 CellStyle cell_style_green = workbook.createCellStyle();
                 cell_style_green.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+                cell_style_green.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
                 CellStyle cell_style_blue = workbook.createCellStyle();
                 cell_style_blue.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+                cell_style_blue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                cell_style_blue.setFillBackgroundColor(IndexedColors.LIGHT_BLUE.getIndex());
 
                 if (cell_info.getStatus() == MarkedPaper.STATUS.CORRECT) {
                     cell.setCellStyle(cell_style_green);
+                    //test.setCellStyle(cell_style_green);
+                    System.out.println(((XSSFColor) cell.getCellStyle().getFillForegroundColorColor()).getARGBHex());
                 } else if (cell_info.getStatus() == MarkedPaper.STATUS.PARTIAL) {
+                    //test.setCellStyle(cell_style_blue);
                     cell.setCellStyle(cell_style_blue);
                 } else if (cell_info.getStatus() == MarkedPaper.STATUS.WRONG) {
+                    //test.setCellStyle(cell_style_red);
                     cell.setCellStyle(cell_style_red);
                 }
-                FileOutputStream outputFile = new FileOutputStream("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\student_sheet\\student_sheet.xlsx");
-                workbook.write(outputFile);
-                outputFile.close();
+                try (FileOutputStream outputFile = new FileOutputStream("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\student_sheet\\answer_sheet.xlsx")) {
+                    workbook.write(outputFile);
+                }
+                openFile.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void testMethod() {
+        try {
+            FileInputStream openFile = new FileInputStream(new File("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\test.xlsx"));
+            Workbook wb = new XSSFWorkbook(openFile);
+            Sheet sheet = wb.getSheetAt(0);
+
+            // Create a row and put some cells in it. Rows are 0 based.
+            Row row = sheet.createRow(1);
+
+
+            // Aqua background
+            CellStyle style = wb.createCellStyle();
+            style.setFillBackgroundColor(IndexedColors.AQUA.getIndex());
+            style.setFillPattern(FillPatternType.BIG_SPOTS);
+            Cell cell = row.createCell(1);
+            cell.setCellValue("X");
+            cell.setCellStyle(style);
+
+            // Orange "foreground", foreground being the fill foreground not the font color.
+            style = wb.createCellStyle();
+            style.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
+            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            cell = row.createCell(2);
+            cell.setCellValue("X");
+            cell.setCellStyle(style);
+
+
+            try (FileOutputStream fileOut = new FileOutputStream(new File("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\test.xlsx"))) {
+                wb.write(fileOut);
+            }
+
+            wb.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
