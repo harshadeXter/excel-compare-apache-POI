@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
-import java.util.Map;
 
 
 @Service
@@ -38,11 +36,7 @@ public class ReadExcelFileImpl implements ReadExcelFile {
 
 
             results = validateAnswers(answer_sheet_map, student_sheet_map);
-            //System.out.println(results.size());
-            //testMethod();
             markAnswerSheet(results);
-            //HashMap h = loadExcelIntoHtml(answer_sheet);
-            //System.out.println(h);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -82,7 +76,6 @@ public class ReadExcelFileImpl implements ReadExcelFile {
                 }
             }
         }
-        //System.out.println(cell_details.size());
         return cell_details;
     }
 
@@ -124,7 +117,6 @@ public class ReadExcelFileImpl implements ReadExcelFile {
                 }
             }
         }
-        //System.out.println(cell_details.size());
         return cell_details;
     }
 
@@ -176,7 +168,6 @@ public class ReadExcelFileImpl implements ReadExcelFile {
     public void markAnswerSheet(HashMap results) {
         for (Object key : results.keySet()) {
             MarkedPaper cell_info = (MarkedPaper) results.get(key);
-            //System.out.println("Cell info "  + cell_info.getCellIndex());
             int rowIndex = cell_info.getRowId();
             int columnIndex = cell_info.getColumnId();
             try {
@@ -184,9 +175,7 @@ public class ReadExcelFileImpl implements ReadExcelFile {
                 XSSFWorkbook workbook = new XSSFWorkbook(openFile);
                 XSSFSheet sheetName = workbook.getSheetAt(0);
                 Cell cell = sheetName.getRow(rowIndex).getCell(columnIndex);
-               /* Row row = sheetName.createRow(rowIndex);
-                Cell test = row.createCell(columnIndex);*/
-                //System.out.println(cell);
+
                 CellStyle cell_style_red = workbook.createCellStyle();
                 cell_style_red.setFillForegroundColor(IndexedColors.RED.getIndex());
                 cell_style_red.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -201,13 +190,10 @@ public class ReadExcelFileImpl implements ReadExcelFile {
 
                 if (cell_info.getStatus() == MarkedPaper.STATUS.CORRECT) {
                     cell.setCellStyle(cell_style_green);
-                    //test.setCellStyle(cell_style_green);
                     System.out.println(((XSSFColor) cell.getCellStyle().getFillForegroundColorColor()).getARGBHex());
                 } else if (cell_info.getStatus() == MarkedPaper.STATUS.PARTIAL) {
-                    //test.setCellStyle(cell_style_blue);
                     cell.setCellStyle(cell_style_blue);
                 } else if (cell_info.getStatus() == MarkedPaper.STATUS.WRONG) {
-                    //test.setCellStyle(cell_style_red);
                     cell.setCellStyle(cell_style_red);
                 }
                 try (FileOutputStream outputFile = new FileOutputStream("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\student_sheet\\answer_sheet.xlsx")) {
