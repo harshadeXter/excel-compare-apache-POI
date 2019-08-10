@@ -37,7 +37,7 @@ public class ExcelController {
         return data.toString();
     }
 
-/*    @CrossOrigin(origins = "http://localhost:8082")
+/*  @CrossOrigin(origins = "http://localhost:8082")
     @GetMapping("/table")
     public HashMap<String, CellCounts> cellIndexes() {
         return excelTableGenerator.getCellIndexes();

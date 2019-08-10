@@ -5,13 +5,17 @@ import com.wiley.poc.excelcompare.model.CellDetails;
 import com.wiley.poc.excelcompare.model.MarkedPaper;
 import com.wiley.poc.excelcompare.service.ReadExcelFile;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.util.IOUtils;
+import org.apache.poi.util.Units;
 import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.extensions.XSSFCellBorder;
 import org.springframework.stereotype.Service;
 
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 
 
@@ -170,30 +174,82 @@ public class ReadExcelFileImpl implements ReadExcelFile {
             MarkedPaper cell_info = (MarkedPaper) results.get(key);
             int rowIndex = cell_info.getRowId();
             int columnIndex = cell_info.getColumnId();
+            String feedback_statement = cell_info.getStatusMessage();
             try {
                 FileInputStream openFile = new FileInputStream(new File("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\student_sheet\\answer_sheet.xlsx"));
                 XSSFWorkbook workbook = new XSSFWorkbook(openFile);
                 XSSFSheet sheetName = workbook.getSheetAt(0);
+
                 Cell cell = sheetName.getRow(rowIndex).getCell(columnIndex);
+                /*Set comments to excel cells*/
+                CreationHelper factory = workbook.getCreationHelper();
+                Drawing drawing = sheetName.createDrawingPatriarch();
+                ClientAnchor anchor = factory.createClientAnchor();
+                Comment comment = drawing.createCellComment(anchor);
+                RichTextString richy = factory.createRichTextString(feedback_statement);
+                comment.setString(richy);
+                cell.setCellComment(comment);
 
                 CellStyle cell_style_red = workbook.createCellStyle();
-                cell_style_red.setFillForegroundColor(IndexedColors.RED.getIndex());
+                cell_style_red.setFillForegroundColor(IndexedColors.ROSE.getIndex());
                 cell_style_red.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                XSSFFont font_red = workbook.createFont();
+                font_red.setColor(IndexedColors.ROSE.getIndex());
+                cell_style_red.setFont(font_red);
+                cell_style_red.setBorderBottom(BorderStyle.THIN);
+                cell_style_red.setBottomBorderColor(IndexedColors.ROSE.getIndex());
+                cell_style_red.setBorderTop(BorderStyle.THIN);
+                cell_style_red.setTopBorderColor(IndexedColors.ROSE.getIndex());
+
                 CellStyle cell_style_green = workbook.createCellStyle();
                 cell_style_green.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-                cell_style_green.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                cell_style_green.setFillPattern(FillPatternType.FINE_DOTS);
+                cell_style_green.setFillBackgroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+                XSSFFont font_green = workbook.createFont();
+                font_green.setColor(IndexedColors.GREEN.getIndex());
+                cell_style_green.setFont(font_green);
+                cell_style_green.setBorderBottom(BorderStyle.THIN);
+                cell_style_green.setBottomBorderColor(IndexedColors.GREEN.getIndex());
+                cell_style_green.setBorderTop(BorderStyle.THIN);
+                cell_style_green.setTopBorderColor(IndexedColors.GREEN.getIndex());
 
                 CellStyle cell_style_blue = workbook.createCellStyle();
-                cell_style_blue.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+                cell_style_blue.setFillForegroundColor(IndexedColors.SKY_BLUE.getIndex());
                 cell_style_blue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                cell_style_blue.setFillBackgroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+                cell_style_blue.setFillBackgroundColor(IndexedColors.SKY_BLUE.getIndex());
+                XSSFFont font_blue = workbook.createFont();
+                font_blue.setColor(IndexedColors.LIGHT_BLUE.getIndex());
+                cell_style_blue.setFont(font_blue);
+                cell_style_blue.setBorderBottom(BorderStyle.THIN);
+                cell_style_blue.setBottomBorderColor(IndexedColors.LIGHT_BLUE.getIndex());
+                cell_style_blue.setBorderTop(BorderStyle.THIN);
+                cell_style_blue.setTopBorderColor(IndexedColors.LIGHT_BLUE.getIndex());
 
                 if (cell_info.getStatus() == MarkedPaper.STATUS.CORRECT) {
+                    /*Image*/
+                    FileInputStream stream = new FileInputStream("C:\\\\_0_dev\\\\projects\\\\poc-excel-compare\\\\src\\\\main\\\\resources\\\\images\\\\tick.png");
+                    anchor.setAnchorType(ClientAnchor.AnchorType.DONT_MOVE_AND_RESIZE);
+                    int tickIndex = workbook.addPicture(IOUtils.toByteArray(stream), Workbook.PICTURE_TYPE_PNG);
+                    anchor.setCol1(columnIndex);
+                    anchor.setRow1(rowIndex);
+                    anchor.setRow2(rowIndex);
+                    anchor.setCol2(rowIndex-1);
+                    Picture pic = drawing.createPicture(anchor,tickIndex);
+                    pic.resize();
                     cell.setCellStyle(cell_style_green);
-                    System.out.println(((XSSFColor) cell.getCellStyle().getFillForegroundColorColor()).getARGBHex());
                 } else if (cell_info.getStatus() == MarkedPaper.STATUS.PARTIAL) {
                     cell.setCellStyle(cell_style_blue);
                 } else if (cell_info.getStatus() == MarkedPaper.STATUS.WRONG) {
+                    /*Image*/
+                    FileInputStream stream = new FileInputStream("C:\\\\_0_dev\\\\projects\\\\poc-excel-compare\\\\src\\\\main\\\\resources\\\\images\\\\cross.png");
+                    anchor.setAnchorType(ClientAnchor.AnchorType.DONT_MOVE_AND_RESIZE);
+                    int tickIndex = workbook.addPicture(IOUtils.toByteArray(stream), Workbook.PICTURE_TYPE_PNG);
+                    anchor.setCol1(columnIndex);
+                    anchor.setRow1(rowIndex);
+                    anchor.setRow2(rowIndex);
+                    anchor.setCol2(rowIndex-1);
+                    Picture pic = drawing.createPicture(anchor,tickIndex);
+                    pic.resize();
                     cell.setCellStyle(cell_style_red);
                 }
                 try (FileOutputStream outputFile = new FileOutputStream("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\student_sheet\\answer_sheet.xlsx")) {
@@ -203,43 +259,6 @@ public class ReadExcelFileImpl implements ReadExcelFile {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public void testMethod() {
-        try {
-            FileInputStream openFile = new FileInputStream(new File("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\test.xlsx"));
-            Workbook wb = new XSSFWorkbook(openFile);
-            Sheet sheet = wb.getSheetAt(0);
-
-            // Create a row and put some cells in it. Rows are 0 based.
-            Row row = sheet.createRow(1);
-
-
-            // Aqua background
-            CellStyle style = wb.createCellStyle();
-            style.setFillBackgroundColor(IndexedColors.AQUA.getIndex());
-            style.setFillPattern(FillPatternType.BIG_SPOTS);
-            Cell cell = row.createCell(1);
-            cell.setCellValue("X");
-            cell.setCellStyle(style);
-
-            // Orange "foreground", foreground being the fill foreground not the font color.
-            style = wb.createCellStyle();
-            style.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
-            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            cell = row.createCell(2);
-            cell.setCellValue("X");
-            cell.setCellStyle(style);
-
-
-            try (FileOutputStream fileOut = new FileOutputStream(new File("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\test.xlsx"))) {
-                wb.write(fileOut);
-            }
-
-            wb.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }
