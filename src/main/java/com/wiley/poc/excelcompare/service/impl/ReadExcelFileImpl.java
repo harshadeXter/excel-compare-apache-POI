@@ -170,6 +170,8 @@ public class ReadExcelFileImpl implements ReadExcelFile {
     }
 
     public void markAnswerSheet(HashMap results) {
+        double count = 0;
+        double total = results.size();
         for (Object key : results.keySet()) {
             MarkedPaper cell_info = (MarkedPaper) results.get(key);
             int rowIndex = cell_info.getRowId();
@@ -233,10 +235,15 @@ public class ReadExcelFileImpl implements ReadExcelFile {
                     anchor.setCol1(columnIndex);
                     anchor.setRow1(rowIndex);
                     anchor.setRow2(rowIndex);
-                    anchor.setCol2(rowIndex-1);
-                    Picture pic = drawing.createPicture(anchor,tickIndex);
+                    anchor.setCol2(columnIndex);
+                    anchor.setDy1(2);
+                    anchor.setDx1(1);
+                    anchor.setDx2(1);
+                    anchor.setDy2(2);
+                    Picture pic = drawing.createPicture(anchor, tickIndex);
                     pic.resize();
                     cell.setCellStyle(cell_style_green);
+                    count++;
                 } else if (cell_info.getStatus() == MarkedPaper.STATUS.PARTIAL) {
                     cell.setCellStyle(cell_style_blue);
                 } else if (cell_info.getStatus() == MarkedPaper.STATUS.WRONG) {
@@ -247,11 +254,12 @@ public class ReadExcelFileImpl implements ReadExcelFile {
                     anchor.setCol1(columnIndex);
                     anchor.setRow1(rowIndex);
                     anchor.setRow2(rowIndex);
-                    anchor.setCol2(rowIndex-1);
-                    Picture pic = drawing.createPicture(anchor,tickIndex);
+                    anchor.setCol2(columnIndex);
+                    Picture pic = drawing.createPicture(anchor, tickIndex);
                     pic.resize();
                     cell.setCellStyle(cell_style_red);
                 }
+
                 try (FileOutputStream outputFile = new FileOutputStream("C:\\_0_dev\\projects\\poc-excel-compare\\src\\main\\resources\\files\\student_sheet\\answer_sheet.xlsx")) {
                     workbook.write(outputFile);
                 }
@@ -260,5 +268,10 @@ public class ReadExcelFileImpl implements ReadExcelFile {
                 e.printStackTrace();
             }
         }
+        System.out.println("count : " + count);
+        System.out.println("total : " + total);
+        double score = Math.round(count / total * 100);
+        System.out.println("score : " + (count / total));
+        System.out.println("score in % : " + score + "%");
     }
 }
